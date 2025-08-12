@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Booking System</title>
+    <style>
+        /* Modern, attractive UI CSS */
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #eef1f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        h1, h2, h3 {
+            color: #1a237e;
+            font-weight: 600;
+        }
+        h1 {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        form {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: 500;
+            color: #555;
+        }
+        input[type="text"], input[type="email"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #dcdcdc;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus, input[type="email"]:focus {
+            border-color: #4f6dff;
+            box-shadow: 0 0 5px rgba(79, 109, 255, 0.3);
+            outline: none;
+        }
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4f6dff;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(79, 109, 255, 0.2);
+        }
+        button:hover {
+            background-color: #3b50c0;
+            transform: translateY(-2px);
+        }
+        .bus-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background-color: #fafbfd;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        .bus-card:hover {
+            transform: translateY(-5px);
+        }
+        .bus-card .details h3 {
+            margin: 0;
+            font-size: 1.3em;
+            color: #1a237e;
+        }
+        .bus-card .details p {
+            margin: 5px 0 0;
+            color: #6a6a6a;
+        }
+        .seat-layout {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f7f9fc;
+            border-radius: 10px;
+        }
+        .seat {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            border: 2px solid #dcdcdc;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .seat.available {
+            background-color: #e6f7ff;
+            cursor: pointer;
+        }
+        .seat.available:hover {
+            background-color: #cce9ff;
+            transform: scale(1.05);
+        }
+        .seat.booked {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+        .seat.selected {
+            background-color: #4f6dff;
+            color: white;
+            border-color: #4f6dff;
+            transform: scale(1.1);
+        }
+        .hidden {
+            display: none;
+        }
+        .booking-summary {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #eef2ff;
+            border: 1px solid #c9d6ff;
+            box-shadow: 0 2px 10px rgba(79, 109, 255, 0.1);
+        }
+        .booking-summary h3 {
+            border-bottom: 1px solid #c9d6ff;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .booking-summary p {
+            font-size: 1.1em;
+            color: #555;
+        }
+        
+        .booking-summary p span {
+            font-weight: 600;
+            color: #1a237e;
+        }
+        #passenger-form {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        #confirmation {
+            text-align: center;
+            margin-top: 40px;
+            padding: 40px;
+            background-color: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+        }
+        #confirmation h2 {
+            color: #2e7d32;
+            font-size: 2em;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="search-view">
+        <h1>Find Your Bus</h1>
+        <form id="search-form">
+            <input type="text" id="origin" placeholder="From (e.g., City A)" required value="City A">
+            <input type="text" id="destination" placeholder="To (e.g., City B)" required value="City B">
+            <button type="submit">Search</button>
+        </form>
+        <div id="results-list"></div>
+    </div>
+    <div id="booking-view" class="hidden">
+        <h2 id="booking-title"></h2>
+        <p>Click on a seat to select it.</p>
+        <div id="seat-layout" class="seat-layout"></div>
+        <div class="booking-summary hidden" id="booking-summary">
+            <h3>Selected Seats:</h3>
+            <p id="selected-seats-info"></p>
+            <p>Total Fare: $<span id="total-fare">0</span></p>
+            <form id="passenger-form">
+                <input type="text" id="passenger-name" placeholder="Full Name" required>
+                <input type="email" id="passenger-email" placeholder="Email Address" required>
+                <button type="submit">Confirm Booking</button>
+                <button type="button" id="cancel-booking">Cancel</button>
+            </form>
+        </div>
+    </div>
+    <div id="confirmation-view" class="hidden">
+        <div id="confirmation">
+            <h2>Booking Confirmed!</h2>
+            <p>Thank you for your booking, <span id="conf-name"></span>.</p>
+            <p>Your seats (<span id="conf-seats"></span>) are reserved on bus <span id="conf-bus"></span>.</p>
+            <button onclick="window.location.reload()">New Booking</button>
+        </div>
+    </div>
+</div>
+<script>
+    // --- In-memory "Database" for demonstration ---
+    const buses = {
+        '101': {
+            id: '101',
+            origin: 'City A',
+            destination: 'City B',
+            departure: '08:00 AM',
+            fare: 50,
+            seats: Array.from({ length: 30 }, (_, i) => ({
+                id: i + 1,
+                status: i < 5 ? 'booked' : 'available'
+            }))
+        },
+        '102': {
+            id: '102',
+            origin: 'City C',
+            destination: 'City D',
+            departure: '12:30 PM',
+            fare: 65,
+            seats: Array.from({ length: 30 }, (_, i) => ({
+                id: i + 1,
+                status: 'available'
+            }))
+        }
+    };
+    // --- State variables ---
+    let selectedBus = null;
+    let selectedSeats = new Set();
+    
+    // --- DOM Elements ---
+    const searchView = document.getElementById('search-view');
+    const bookingView = document.getElementById('booking-view');
+    const confirmationView = document.getElementById('confirmation-view');
+    const resultsList = document.getElementById('results-list');
+    const searchForm = document.getElementById('search-form');
+    const seatLayout = document.getElementById('seat-layout');
+    const bookingSummary = document.getElementById('booking-summary');
+    const passengerForm = document.getElementById('passenger-form');
+    // --- Functions ---
+    function renderBusList(origin, destination) {
+        resultsList.innerHTML = '';
+        const foundBuses = Object.values(buses).filter(bus =>
+            bus.origin.toLowerCase() === origin.toLowerCase() &&
+            bus.destination.toLowerCase() === destination.toLowerCase()
+        );
+        if (foundBuses.length === 0) {
+            resultsList.innerHTML = '<p>No buses found for this route.</p>';
+            return;
+        }
+        foundBuses.forEach(bus => {
+            const card = document.createElement('div');
+            card.className = 'bus-card';
+            card.innerHTML = `
+                <div class="details">
+                    <h3>Bus ${bus.id} | ${bus.origin} &rarr; ${bus.destination}</h3>
+                    <p>Departure: ${bus.departure} | Fare: $${bus.fare}</p>
+                </div>
+                <button data-bus-id="${bus.id}">Select Seats</button>
+            `;
+            resultsList.appendChild(card);
+        });
+        resultsList.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                showSeatLayout(e.target.dataset.busId);
+            });
+        });
+    }
+    function showSeatLayout(busId) {
+        selectedBus = buses[busId];
+        if (!selectedBus) return;
+        searchView.classList.add('hidden');
+        bookingView.classList.remove('hidden');
+        document.getElementById('booking-title').textContent = Select Seats for Bus ${selectedBus.id};
+        seatLayout.innerHTML = '';
+        selectedSeats.clear();
+        updateBookingSummary();
+        
+        selectedBus.seats.forEach(seat => {
+            const seatDiv = document.createElement('div');
+            seatDiv.className = seat ${seat.status};
+            seatDiv.textContent = seat.id;
+            seatDiv.dataset.seatId = seat.id;
+            
+            if (seat.status === 'available') {
+                seatDiv.addEventListener('click', () => toggleSeatSelection(seatDiv, seat.id));
+            }
+            seatLayout.appendChild(seatDiv);
+        });
+    }
+    function toggleSeatSelection(seatDiv, seatId) {
+        const id = seatId.toString();
+        if (selectedSeats.has(id)) {
+            selectedSeats.delete(id);
+            seatDiv.classList.remove('selected');
+        } else {
+            selectedSeats.add(id);
+            seatDiv.classList.add('selected');
+        }
+        updateBookingSummary();
+    }
+    function updateBookingSummary() {
+        if (selectedSeats.size > 0) {
+            bookingSummary.classList.remove('hidden');
+            document.getElementById('selected-seats-info').textContent = [...selectedSeats].sort((a,b) => a-b).join(', ');
+            document.getElementById('total-fare').textContent = selectedSeats.size * selectedBus.fare;
+        } else {
+            bookingSummary.classList.add('hidden');
+        }
+    }
+    function confirmBooking(name, email) {
+        if (selectedSeats.size === 0) {
+            alert('Please select at least one seat.');
+            return;
+        }
+        // Simulate booking by updating the bus object
+        selectedSeats.forEach(seatId => {
+            const seat = selectedBus.seats.find(s => s.id.toString() === seatId);
+            if (seat) {
+                seat.status = 'booked';
+            }
+        });
+        
+        // Display confirmation
+        bookingView.classList.add('hidden');
+        confirmationView.classList.remove('hidden');
+        document.getElementById('conf-name').textContent = name;
+        document.getElementById('conf-seats').textContent = [...selectedSeats].sort((a,b) => a-b).join(', ');
+        document.getElementById('conf-bus').textContent = selectedBus.id;
+    }
+    // --- Event Listeners ---
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const origin = document.getElementById('origin').value;
+        const destination = document.getElementById('destination').value;
+        renderBusList(origin, destination);
+    });
+    passengerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('passenger-name').value;
+        const email = document.getElementById('passenger-email').value;
+        confirmBooking(name, email);
+    });
+    document.getElementById('cancel-booking').addEventListener('click', () => {
+        // Go back to the search view
+        selectedBus = null;
+        selectedSeats.clear();
+        searchView.classList.remove('hidden');
+        bookingView.classList.add('hidden');
+        renderBusList(document.getElementById('origin').value, document.getElementById('destination').value);
+    });
+    // Initial render
+    renderBusList('City A', 'City B');
+</script>
+</body>
+</html>
